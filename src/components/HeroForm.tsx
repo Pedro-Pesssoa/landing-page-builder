@@ -14,6 +14,8 @@ import { toast } from "sonner";
 
 const WEBHOOK_URL =
   "https://backend.fenil.com.br/webhook-forms/receive/b1e48cc898f8ea5eca135c717c1145582d46fa28caae675772fcb4c27909dc43";
+const N8N_WEBHOOK_URL =
+  "https://n8n.fenil.com.br/webhook/54bd019c-9d96-48d3-988a-f23d263d1d03";
 
 const formSchema = z.object({
   restaurante: z.string().min(1, "Selecione uma opção"),
@@ -73,17 +75,15 @@ const HeroForm = ({
     }
     setIsSubmitting(true);
     try {
-      await fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: data.nome,
-          email: data.email,
-          celular: "55" + data.celular.replace(/\D/g, ""),
-          gerencia_restaurante: data.restaurante === "sim" ? "Sim" : "Não",
-          trabalha_delivery: data.delivery === "sim" ? "Sim" : "Não",
-        }),
+      const payload = JSON.stringify({
+        nome: data.nome,
+        email: data.email,
+        celular: "55" + data.celular.replace(/\D/g, ""),
+        gerencia_restaurante: data.restaurante === "sim" ? "Sim" : "Não",
+        trabalha_delivery: data.delivery === "sim" ? "Sim" : "Não",
       });
+      await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
+      fetch(N8N_WEBHOOK_URL, { method: "POST", mode: "no-cors", body: payload }).catch(() => {});
       toast.success("Formulário enviado com sucesso! Entraremos em contato.");
       setSubmitted(true);
     } catch {
